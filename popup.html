@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Detoxify</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#07080F;--bg2:#0C0E1A;--s1:#111426;--s2:#161930;--s3:#1C2038;
+  --b1:rgba(255,255,255,0.055);--b2:rgba(255,255,255,0.1);--b3:rgba(255,255,255,0.16);
+  --ac:#6366F1;--ac2:#8B5CF6;--cy:#22D3EE;
+  --tx:#E2E8F8;--tx2:#8B92B4;--tx3:#434868;
+  --gr:#22C55E;--rd:#F43F5E;--am:#F59E0B;
+  --gr-d:rgba(34,197,94,0.1);--rd-d:rgba(244,63,94,0.1);--am-d:rgba(245,158,11,0.1);
+  --font:'Outfit',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r8:8px;--r12:12px;--r16:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{width:380px;min-height:580px;background:var(--bg);font-family:var(--font);color:var(--tx);overflow:hidden;}
+
+/* ── Orbs ── */
+.orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;}
+.orb1{width:260px;height:260px;top:-100px;left:-80px;
+  background:radial-gradient(circle,rgba(99,102,241,0.13) 0%,transparent 68%);
+  animation:orbf 9s ease-in-out infinite;}
+.orb2{width:220px;height:220px;bottom:-70px;right:-60px;
+  background:radial-gradient(circle,rgba(34,211,238,0.1) 0%,transparent 68%);
+  animation:orbf 11s ease-in-out infinite reverse;}
+@keyframes orbf{0%,100%{transform:translate(0,0)}50%{transform:translate(12px,8px)}}
+
+/* ── App shell ── */
+.app{position:relative;z-index:1;display:flex;flex-direction:column;height:580px;}
+
+/* ── Header ── */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px 14px;
+  border-bottom:1px solid var(--b1);
+  flex-shrink:0;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.logo-ring{
+  width:36px;height:36px;border-radius:10px;padding:1px;flex-shrink:0;
+  background:linear-gradient(135deg,#6366F1,#8B5CF6,#22D3EE);
+}
+.logo-fill{
+  width:100%;height:100%;border-radius:9px;
+  background:linear-gradient(145deg,#1A1D38,#0F1124);
+  display:flex;align-items:center;justify-content:center;
+}
+.logo-fill svg{width:18px;height:18px;}
+.brand-text{display:flex;flex-direction:column;}
+.brand-text h1{
+  font-size:1em;font-weight:800;line-height:1.1;letter-spacing:-0.01em;
+  background:linear-gradient(135deg,#BFC3FF 0%,#A78BFA 45%,#67E8F9 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.brand-text .ver{font-size:0.58em;color:var(--tx3);font-weight:500;margin-top:1px;}
+
+/* Status pill */
+.spill{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:100px;border:1px solid;
+  font-size:0.58em;font-weight:600;letter-spacing:0.02em;cursor:default;
+  transition:all 0.3s;
+}
+.spill.ok{border-color:rgba(34,197,94,0.3);color:var(--gr);background:var(--gr-d);}
+.spill.err{border-color:rgba(244,63,94,0.3);color:var(--rd);background:var(--rd-d);}
+.spill.warn{border-color:rgba(245,158,11,0.3);color:var(--am);background:var(--am-d);}
+.sdot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.spill.ok .sdot{animation:dotping 2s ease infinite;}
+@keyframes dotping{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:0.4}}
+
+/* ── Content area ── */
+.content{flex:1;overflow:hidden;position:relative;}
+.tab-pane{
+  position:absolute;inset:0;overflow-y:auto;
+  padding:16px 18px 12px;
+  display:none;
+  scrollbar-width:thin;scrollbar-color:var(--b2) transparent;
+}
+.tab-pane::-webkit-scrollbar{width:3px;}
+.tab-pane::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+.tab-pane.active{display:block;animation:tabin 0.22s ease both;}
+@keyframes tabin{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Bottom nav ── */
+.nav{
+  display:flex;align-items:center;
+  border-top:1px solid var(--b1);
+  background:rgba(7,8,15,0.95);
+  backdrop-filter:blur(16px);
+  flex-shrink:0;
+  position:relative;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:9px 4px 10px;
+  background:none;border:none;cursor:pointer;
+  color:var(--tx3);font-family:var(--font);font-size:0.58em;font-weight:600;
+  letter-spacing:0.04em;text-transform:uppercase;
+  transition:color 0.2s;
+}
+.nav-btn svg{width:16px;height:16px;transition:transform 0.2s;}
+.nav-btn.active{color:var(--ac);}
+.nav-btn:hover:not(.active){color:var(--tx2);}
+.nav-btn:hover:not(.active) svg{transform:translateY(-1px);}
+.nav-ind{
+  position:absolute;top:0;left:0;height:1.5px;width:25%;
+  background:linear-gradient(90deg,var(--ac),var(--cy));
+  border-radius:0 0 2px 2px;
+  transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Generic card ── */
+.card{
+  position:relative;border-radius:var(--r12);
+  background:var(--s1);
+  border:1px solid var(--b1);
+  overflow:hidden;
+  transition:border-color 0.2s;
+}
+.card:hover{border-color:var(--b2);}
+
+/* Gradient-border card variant */
+.gcard{
+  position:relative;border-radius:var(--r12);padding:1px;
+  background:linear-gradient(135deg,rgba(99,102,241,0.28),rgba(255,255,255,0.04) 50%,rgba(34,211,238,0.18));
+}
+.gcard-in{background:var(--s1);border-radius:11px;padding:14px;}
+
+/* ── Section label ── */
+.sec-label{
+  font-size:0.58em;font-weight:700;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--tx3);
+  display:flex;align-items:center;gap:8px;margin-bottom:10px;
+}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--b1);}
+
+/* ── Form elements ── */
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:0.67em;font-weight:600;color:var(--tx2);}
+input[type="text"],input[type="password"]{
+  width:100%;padding:9px 12px;
+  background:var(--s2);border:1px solid var(--b1);border-radius:var(--r8);
+  color:var(--tx);font-family:var(--font);font-size:0.82em;font-weight:400;
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s,background 0.2s;
+}
+input[type="text"]:hover,input[type="password"]:hover{border-color:var(--b2);}
+input[type="text"]:focus,input[type="password"]:focus{
+  border-color:rgba(99,102,241,0.55);
+  box-shadow:0 0 0 3px rgba(99,102,241,0.1);
+  background:var(--s3);
+}
+input::placeholder{color:var(--tx3);font-weight:400;}
+
+/* Custom stepper */
+.stepper{
+  display:flex;align-items:center;
+  background:var(--s2);border:1px solid var(--b1);border-radius:var(--r8);
+  overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s;
+}
+.stepper:focus-within{border-color:rgba(99,102,241,0.55);box-shadow:0 0 0 3px rgba(99,102,241,0.1);}
+.step-btn{
+  width:32px;height:36px;background:none;border:none;
+  color:var(--tx3);cursor:pointer;font-size:1em;font-family:var(--font);
+  display:flex;align-items:center;justify-content:center;
+  transition:color 0.15s,background 0.15s;flex-shrink:0;
+}
+.step-btn:hover{color:var(--ac);background:rgba(99,102,241,0.08);}
+.step-val{
+  flex:1;text-align:center;
+  background:transparent;border:none;outline:none;
+  color:var(--tx);font-family:var(--mono);font-size:0.88em;font-weight:500;
+  min-width:0;
+}
+.step-unit{
+  padding:0 10px;font-size:0.62em;color:var(--tx3);font-weight:600;
+  white-space:nowrap;border-left:1px solid var(--b1);
+  height:100%;display:flex;align-items:center;
+}
+
+/* ── Presets chips ── */
+.chips{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
+.chips::-webkit-scrollbar{display:none;}
+.chip{
+  flex-shrink:0;padding:5px 11px;border-radius:100px;
+  border:1px solid var(--b2);background:var(--s2);
+  color:var(--tx2);font-size:0.68em;font-weight:500;
+  cursor:pointer;white-space:nowrap;
+  transition:all 0.18s;
+}
+.chip:hover{border-color:rgba(99,102,241,0.5);color:var(--ac);background:rgba(99,102,241,0.08);}
+.chip.active{border-color:var(--ac);color:var(--ac);background:rgba(99,102,241,0.12);}
+.chip-add{
+  flex-shrink:0;padding:5px 11px;border-radius:100px;
+  border:1px dashed var(--b2);background:none;
+  color:var(--tx3);font-size:0.68em;font-weight:500;
+  cursor:pointer;white-space:nowrap;
+  transition:all 0.18s;
+}
+.chip-add:hover{border-color:rgba(99,102,241,0.4);color:var(--ac);}
+
+/* ── Progress ── */
+.prog-wrap{display:none;flex-direction:column;gap:7px;}
+.prog-wrap.show{display:flex;}
+.prog-meta{display:flex;justify-content:space-between;align-items:center;}
+.prog-meta span{font-size:0.65em;font-weight:500;color:var(--tx2);}
+.prog-pct{font-family:var(--mono)!important;color:var(--ac)!important;}
+.bar{height:3px;background:rgba(99,102,241,0.12);border-radius:100px;overflow:hidden;}
+.bar-fill{
+  height:100%;width:0%;border-radius:100px;
+  background:linear-gradient(90deg,var(--ac),var(--cy));
+  background-size:200% 100%;
+  transition:width 0.5s cubic-bezier(0.4,0,0.2,1);
+  animation:barshine 2.5s linear infinite;
+  box-shadow:0 0 8px rgba(99,102,241,0.4);
+}
+@keyframes barshine{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── Buttons ── */
+.btn-run{
+  width:100%;padding:12px 16px;border:none;border-radius:var(--r12);
+  font-family:var(--font);font-size:0.8em;font-weight:700;letter-spacing:0.01em;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#5B5FE8 0%,#7C3AED 50%,#0891B2 100%);
+  background-size:200% 100%;color:#fff;
+  box-shadow:0 4px 24px rgba(99,102,241,0.32),0 1px 0 rgba(255,255,255,0.12) inset;
+  transition:all 0.25s ease;
+}
+.btn-run::before{
+  content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent);
+  transform:skewX(-20deg);transition:left 0.5s ease;
+}
+.btn-run:hover:not(:disabled){
+  background-position:100% 0;transform:translateY(-1px);
+  box-shadow:0 6px 32px rgba(99,102,241,0.5),0 1px 0 rgba(255,255,255,0.18) inset;
+}
+.btn-run:hover:not(:disabled)::before{left:150%;}
+.btn-run:active:not(:disabled){transform:translateY(0);}
+.btn-run:disabled{opacity:0.38;cursor:not-allowed;transform:none;}
+.btn-run.running{
+  background:var(--s2);background-size:100%;
+  border:1px solid var(--b2);color:var(--am);
+  box-shadow:none;
+}
+.btn-run svg{width:13px;height:13px;flex-shrink:0;}
+@keyframes spinspin{to{transform:rotate(360deg)}}
+.ring-spin{
+  width:13px;height:13px;flex-shrink:0;
+  border:2px solid rgba(245,158,11,0.2);border-top-color:var(--am);
+  border-radius:50%;animation:spinspin 0.7s linear infinite;
+}
+.btn-stop{
+  width:100%;padding:9px 16px;background:none;
+  border:1px solid var(--b2);border-radius:var(--r8);
+  color:var(--tx2);font-family:var(--font);font-size:0.72em;font-weight:600;
+  cursor:pointer;transition:all 0.2s;display:none;
+}
+.btn-stop:hover{border-color:rgba(244,63,94,0.4);color:var(--rd);background:var(--rd-d);}
+.btn-stop.show{display:block;}
+
+/* ── Log terminal ── */
+.term{border-radius:var(--r12);background:var(--bg2);border:1px solid var(--b1);overflow:hidden;}
+.term-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;background:rgba(255,255,255,0.018);border-bottom:1px solid var(--b1);
+}
+.tlights{display:flex;gap:5px;}
+.tl{width:8px;height:8px;border-radius:50%;}
+.tlr{background:#FF5F57;}.tly{background:#FEBC2E;}.tlg{background:#28C840;}
+.term-ttl{font-size:0.58em;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--tx3);}
+.term-v{font-size:0.55em;color:var(--tx3);font-family:var(--mono);background:rgba(255,255,255,0.04);padding:2px 7px;border-radius:4px;}
+#logBox{
+  padding:9px 12px;min-height:80px;max-height:110px;
+  overflow-y:auto;font-family:var(--mono);font-size:0.67em;line-height:1.8;
+  scrollbar-width:thin;scrollbar-color:var(--b2) transparent;
+}
+#logBox::-webkit-scrollbar{width:3px;}
+#logBox::-webkit-scrollbar-thumb{background:var(--b2);}
+.ll{display:flex;gap:9px;}
+.lt{color:var(--tx3);flex-shrink:0;}
+.lm{color:var(--tx2);}
+.lm.success{color:var(--gr);}
+.lm.error{color:var(--rd);}
+.lm.warn{color:var(--am);}
+.lm.info{color:#8BA8FF;}
+.lcursor{display:inline-block;width:5px;height:11px;background:var(--ac);border-radius:1px;vertical-align:middle;margin-left:2px;animation:cur 1.1s step-end infinite;}
+@keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── SESSION TAB ── */
+.st-top{display:flex;flex-direction:column;gap:12px;}
+.row2{display:flex;gap:10px;}
+.row2 .field{flex:1;}
+.calc-badge{
+  font-family:var(--mono);font-size:0.63em;color:var(--ac);
+  font-weight:500;opacity:0.9;
+}
+.actions{display:flex;flex-direction:column;gap:7px;}
+
+/* ── STATS TAB ── */
+.score-hero{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;}
+.ring-wrap{position:relative;width:150px;height:150px;}
+.ring-wrap svg{width:100%;height:100%;}
+.ring-track{fill:none;stroke:rgba(99,102,241,0.1);stroke-width:10;}
+.ring-bar{
+  fill:none;stroke:url(#rg);stroke-width:10;stroke-linecap:round;
+  stroke-dasharray:351.86;stroke-dashoffset:351.86;
+  transform:rotate(-90deg);transform-origin:70px 70px;
+  transition:stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1);
+}
+.ring-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;
+}
+.ring-num{
+  font-size:1.9em;font-weight:800;line-height:1;letter-spacing:-0.03em;
+  background:linear-gradient(135deg,#A5B4FC,#67E8F9);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.ring-lbl{font-size:0.6em;color:var(--tx3);font-weight:500;}
+.score-tagline{font-size:0.72em;color:var(--tx2);text-align:center;margin-top:4px;}
+.score-tagline span{color:var(--ac);font-weight:600;}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;}
+.stat-tile{
+  background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);
+  padding:10px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  transition:border-color 0.2s;
+}
+.stat-tile:hover{border-color:var(--b2);}
+.stat-tile svg{width:14px;height:14px;color:var(--ac);flex-shrink:0;}
+.stat-n{font-size:1.2em;font-weight:800;font-family:var(--mono);color:var(--tx);letter-spacing:-0.02em;}
+.stat-l{font-size:0.58em;color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
+.recent-topics{display:flex;flex-direction:column;gap:6px;}
+.topic-pill{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r8);
+}
+.topic-pill-name{font-size:0.74em;font-weight:500;color:var(--tx);}
+.topic-pill-meta{font-size:0.62em;color:var(--tx3);font-family:var(--mono);}
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 0;gap:8px;
+}
+.empty-icon{
+  width:40px;height:40px;border-radius:12px;
+  background:rgba(99,102,241,0.1);
+  display:flex;align-items:center;justify-content:center;
+}
+.empty-icon svg{width:20px;height:20px;color:var(--ac);}
+.empty-t{font-size:0.8em;font-weight:600;color:var(--tx2);}
+.empty-s{font-size:0.68em;color:var(--tx3);text-align:center;}
+
+/* ── HISTORY TAB ── */
+.hist-list{display:flex;flex-direction:column;gap:7px;}
+.hist-item{
+  background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+  transition:border-color 0.2s,background 0.2s;
+}
+.hist-item:hover{border-color:var(--b2);background:var(--s2);}
+.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.hist-dot.done{background:var(--gr);box-shadow:0 0 6px rgba(34,197,94,0.4);}
+.hist-dot.part{background:var(--am);}
+.hist-dot.fail{background:var(--rd);}
+.hist-body{flex:1;min-width:0;}
+.hist-topic{font-size:0.78em;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-sub{font-size:0.62em;color:var(--tx3);margin-top:1px;}
+.hist-badge{
+  flex-shrink:0;padding:3px 8px;border-radius:100px;
+  font-size:0.6em;font-weight:600;
+}
+.hist-badge.done{background:var(--gr-d);color:var(--gr);}
+.hist-badge.part{background:var(--am-d);color:var(--am);}
+.hist-badge.fail{background:var(--rd-d);color:var(--rd);}
+
+/* ── SETTINGS TAB ── */
+.settings-sections{display:flex;flex-direction:column;gap:14px;}
+.sset-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r12);padding:14px;display:flex;flex-direction:column;gap:12px;}
+.sset-row{display:flex;align-items:center;justify-content:space-between;}
+.sset-row-label{display:flex;flex-direction:column;gap:2px;}
+.sset-row-label span:first-child{font-size:0.76em;font-weight:600;color:var(--tx);}
+.sset-row-label span:last-child{font-size:0.62em;color:var(--tx3);}
+.sset-input-row{display:flex;gap:7px;}
+.sset-input-row input{flex:1;}
+.btn-sm{
+  padding:8px 13px;border-radius:var(--r8);font-family:var(--font);
+  font-size:0.72em;font-weight:600;cursor:pointer;transition:all 0.18s;
+  white-space:nowrap;
+}
+.btn-sm.pri{background:var(--ac);border:none;color:#fff;}
+.btn-sm.pri:hover{background:#7577F8;}
+.btn-sm.ghost{background:none;border:1px solid var(--b2);color:var(--tx2);}
+.btn-sm.ghost:hover{border-color:var(--b3);color:var(--tx);}
+.btn-sm.danger{background:none;border:1px solid rgba(244,63,94,0.3);color:var(--rd);}
+.btn-sm.danger:hover{background:var(--rd-d);}
+.preset-list{display:flex;flex-direction:column;gap:6px;}
+.preset-item{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:7px 10px;background:var(--s2);border-radius:var(--r8);
+}
+.preset-item span{font-size:0.74em;color:var(--tx2);flex:1;}
+.preset-del{
+  background:none;border:none;cursor:pointer;color:var(--tx3);padding:2px;
+  transition:color 0.15s;
+}
+.preset-del:hover{color:var(--rd);}
+.api-note{font-size:0.62em;color:var(--tx3);}
+.api-note a{color:var(--ac);text-decoration:none;}
+.api-note a:hover{text-decoration:underline;}
+.sset-feedback{font-size:0.65em;height:16px;}
+.sset-feedback.ok{color:var(--gr);}
+.sset-feedback.err{color:var(--rd);}
+.about-row{display:flex;align-items:center;justify-content:space-between;}
+.about-row span{font-size:0.7em;color:var(--tx3);}
+.about-row a{font-size:0.7em;color:var(--ac);text-decoration:none;}
+.about-row a:hover{text-decoration:underline;}
+
+/* ── Toggle switch ── */
+.tog-wrap{position:relative;width:34px;height:20px;flex-shrink:0;}
+.tog-inp{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;margin:0;z-index:1;}
+.tog-track{
+  position:absolute;inset:0;border-radius:100px;
+  background:var(--s3);border:1px solid var(--b2);
+  transition:background 0.2s;pointer-events:none;
+}
+.tog-thumb{
+  position:absolute;top:2px;left:2px;
+  width:14px;height:14px;border-radius:50%;
+  background:#fff;transition:transform 0.2s;pointer-events:none;
+  box-shadow:0 1px 3px rgba(0,0,0,0.4);
+}
+.tog-inp:checked ~ .tog-track{background:var(--ac);border-color:var(--ac);}
+.tog-inp:checked ~ .tog-thumb{transform:translateX(14px);}
+
+/* ── Utility ── */
+.gap8{display:flex;flex-direction:column;gap:8px;}
+.gap10{display:flex;flex-direction:column;gap:10px;}
+.gap12{display:flex;flex-direction:column;gap:12px;}
+.mt8{margin-top:8px;}
+.mt12{margin-top:12px;}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="app">
+
+  <!-- ── Header ── -->
+  <div class="hdr">
+    <div class="brand">
+      <div class="logo-ring">
+        <div class="logo-fill">
+          <svg viewBox="0 0 24 24" fill="none">
+            <defs>
+              <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#A78BFA"/>
+                <stop offset="100%" stop-color="#67E8F9"/>
+              </linearGradient>
+            </defs>
+            <path d="M6 4h5a7 7 0 0 1 0 14H6V4z" fill="url(#lg)" opacity="0.9"/>
+            <path d="M10 8.5c1.5 0 3 1.5 3 3.5s-1.5 3.5-3 3.5" stroke="rgba(255,255,255,0.35)" stroke-width="1" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="brand-text">
+        <h1>Detoxify</h1>
+        <span class="ver">Algorithm Harmonizer v2</span>
+      </div>
+    </div>
+    <div id="ytBadge" class="spill warn">
+      <div class="sdot"></div>
+      <span id="badgeText">Checking…</span>
+    </div>
+  </div>
+
+  <!-- ── Tab content ── -->
+  <div class="content">
+
+    <!-- ╔═ SESSION TAB ═╗ -->
+    <div class="tab-pane active" id="tab-session">
+      <div class="st-top">
+
+        <!-- Presets -->
+        <div>
+          <div class="sec-label">Quick Presets</div>
+          <div class="chips" id="presetChips">
+            <!-- filled by JS -->
+          </div>
+        </div>
+
+        <!-- Topic input -->
+        <div class="field">
+          <label>Topic Focus</label>
+          <input type="text" id="topicInput" value="Machine Learning" placeholder="e.g. Jazz Guitar, Web Design…"/>
+        </div>
+
+        <!-- Config row -->
+        <div class="row2">
+          <div class="field">
+            <label>Videos</label>
+            <div class="stepper" id="vcStepper">
+              <button class="step-btn" id="vcMinus">−</button>
+              <input class="step-val" type="number" id="videoCount" value="5" min="1" max="20" readonly/>
+              <button class="step-btn" id="vcPlus">+</button>
+              <span class="step-unit">/ 20</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Per Video</label>
+            <div class="stepper" id="wdStepper">
+              <button class="step-btn" id="wdMinus">−</button>
+              <input class="step-val" type="number" id="watchDuration" value="30" min="5" max="300" step="5" readonly/>
+              <button class="step-btn" id="wdPlus">+</button>
+              <span class="step-unit">sec</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-badge" id="totalCalc">→ Total session: ~2m 30s</div>
+
+        <!-- Progress -->
+        <div class="prog-wrap" id="progressWrap">
+          <div class="prog-meta">
+            <span id="progressLabel">Initializing…</span>
+            <span class="prog-pct" id="progressPct">0%</span>
+          </div>
+          <div class="bar"><div class="bar-fill" id="progressFill"></div></div>
+        </div>
+
+      </div><!-- /st-top -->
+
+      <!-- Actions -->
+      <div class="actions mt12">
+        <button class="btn-run" id="detoxBtn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4.75a.75.75 0 0 0-1.2.6v13.3a.75.75 0 0 0 1.2.6l10.4-6.65a.75.75 0 0 0 0-1.2L6 4.75z"/></svg>
+          <span id="runBtnText">Start Detox Session</span>
+        </button>
+        <button class="btn-stop" id="stopBtn">Stop Session</button>
+      </div>
+
+      <!-- Terminal log -->
+      <div class="term mt8">
+        <div class="term-bar">
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div class="tlights"><div class="tl tlr"></div><div class="tl tly"></div><div class="tl tlg"></div></div>
+            <span class="term-ttl">Session Log</span>
+          </div>
+          <span class="term-v">v2.0</span>
+        </div>
+        <div id="logBox">
+          <div class="ll">
+            <span class="lt">--:--:--</span>
+            <span class="lm">System ready. Awaiting command…<span class="lcursor"></span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═ STATS TAB ═╗ -->
+    <div class="tab-pane" id="tab-stats">
+
+      <!-- Score ring hero -->
+      <div class="score-hero">
+        <div class="ring-wrap">
+          <svg viewBox="0 0 140 140">
+            <defs>
+              <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366F1"/>
+                <stop offset="50%" stop-color="#8B5CF6"/>
+                <stop offset="100%" stop-color="#22D3EE"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-track" cx="70" cy="70" r="56"/>
+            <circle class="ring-bar" id="scoreRing" cx="70" cy="70" r="56"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-num" id="scoreNum">0<span style="font-size:0.55em;font-weight:600">%</span></div>
+            <div class="ring-lbl">Algorithm Score</div>
+          </div>
+        </div>
+        <div class="score-tagline" id="scoreTagline">Run your first session to start tracking</div>
+      </div>
+
+      <!-- Stat tiles -->
+      <div class="stat-grid">
+        <div class="stat-tile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <div class="stat-n" id="statSessions">0</div>
+          <div class="stat-l">Sessions</div>
+        </div>
+        <div class="stat-tile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          <div class="stat-n" id="statVideos">0</div>
+          <div class="stat-l">Videos</div>
+        </div>
+        <div class="stat-tile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="stat-n" id="statTime">0m</div>
+          <div class="stat-l">Time</div>
+        </div>
+      </div>
+
+      <!-- Recent topics -->
+      <div class="sec-label">Recent Topics</div>
+      <div class="recent-topics" id="recentTopics">
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </div>
+          <div class="empty-t">No sessions yet</div>
+          <div class="empty-s">Run your first detox session to see stats here</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ╔═ HISTORY TAB ═╗ -->
+    <div class="tab-pane" id="tab-history">
+      <div class="sec-label">Session History</div>
+      <div class="hist-list" id="histList">
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="empty-t">No history yet</div>
+          <div class="empty-s">Completed sessions will appear here</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ╔═ SETTINGS TAB ═╗ -->
+    <div class="tab-pane" id="tab-settings">
+      <div class="settings-sections">
+
+        <!-- YouTube status -->
+        <div class="sset-card">
+          <div class="sec-label" style="margin-bottom:0">Connection</div>
+          <div class="sset-row">
+            <div class="sset-row-label">
+              <span>YouTube Session</span>
+              <span id="ytStatusText">Checking cookie…</span>
+            </div>
+            <div id="ytStatusBadge" class="spill warn"><div class="sdot"></div><span>Checking</span></div>
+          </div>
+        </div>
+
+        <!-- API Key -->
+        <div class="sset-card">
+          <div class="sec-label" style="margin-bottom:0">YouTube API Key</div>
+          <div class="gap8">
+            <div class="sset-input-row">
+              <input type="password" id="apiKeyInput" placeholder="AIza… (leave blank to use default)"/>
+              <button class="btn-sm pri" id="saveApiKey">Save</button>
+            </div>
+            <div class="sset-feedback" id="apiKeyFeedback"></div>
+            <div class="api-note">
+              Default key has daily quota. For unlimited usage,
+              <a href="https://console.cloud.google.com/apis/credentials" target="_blank">get your own free key →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Presets management -->
+        <div class="sset-card">
+          <div class="sec-label" style="margin-bottom:0">Saved Presets</div>
+          <div class="preset-list" id="presetList"><!-- filled by JS --></div>
+          <div class="sset-input-row" style="margin-top:4px;">
+            <input type="text" id="newPresetInput" placeholder="Add new preset…" style="font-size:0.78em;"/>
+            <button class="btn-sm ghost" id="addPresetBtn">Add</button>
+          </div>
+        </div>
+
+        <!-- Data -->
+        <div class="sset-card">
+          <div class="sec-label" style="margin-bottom:0">Data</div>
+          <div class="sset-row">
+            <div class="sset-row-label">
+              <span>Clear session history</span>
+              <span>Resets stats and history log</span>
+            </div>
+            <button class="btn-sm danger" id="clearDataBtn">Clear</button>
+          </div>
+        </div>
+
+        <!-- About -->
+        <div class="sset-card">
+          <div class="about-row">
+            <span>Detoxify v2.0.0</span>
+            <a href="https://github.com" target="_blank">View source →</a>
+          </div>
+          <div class="about-row" style="margin-top:6px;">
+            <span>Made with ❤️ for better feeds</span>
+            <a href="mailto:hello@detoxify.app">Support</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- ── Bottom nav ── -->
+  <nav class="nav">
+    <div class="nav-ind" id="navInd"></div>
+    <button class="nav-btn active" data-tab="session" data-idx="0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Session
+    </button>
+    <button class="nav-btn" data-tab="stats" data-idx="1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Stats
+    </button>
+    <button class="nav-btn" data-tab="history" data-idx="2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      History
+    </button>
+    <button class="nav-btn" data-tab="settings" data-idx="3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/><circle cx="4" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></svg>
+      Settings
+    </button>
+  </nav>
+
+</div><!-- /app -->
+
+<script src="popup.js"></script>
+</body>
+</html>

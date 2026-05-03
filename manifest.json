@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Detoxify: AI Algorithm Harmonizer",
+  "version": "2.0.0",
+  "description": "Retrain your YouTube algorithm by auto-watching curated content on the topics you actually love.",
+  "permissions": [
+    "cookies",
+    "tabs",
+    "storage",
+    "scripting",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://www.googleapis.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
